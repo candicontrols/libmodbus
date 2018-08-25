@@ -27,6 +27,10 @@
 #include <linux/serial.h>
 #endif
 
+#ifdef CANDI_S
+ #include "candi_s.h"
+#endif
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
@@ -1261,8 +1265,12 @@ modbus_t* modbus_new_rtu(const char *device,
         errno = ENOMEM;
         return NULL;
     }
+#ifdef CANDI_S
+    strcpy_s(ctx_rtu->device, (strlen(device) + 1) * sizeof(char),  device);
+#else
     strcpy(ctx_rtu->device, device);
-
+#endif
+    
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
         ctx_rtu->parity = parity;

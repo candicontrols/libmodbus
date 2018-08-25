@@ -70,6 +70,11 @@ static inline uint32_t bswap_32(uint32_t x)
 }
 #endif
 
+#ifdef CANDI_S
+ #include "candi_s.h"
+#endif
+
+
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
 void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value)
@@ -125,8 +130,12 @@ float modbus_get_float_abcd(const uint16_t *src)
     uint32_t i;
 
     i = ntohl(((uint32_t)src[0] << 16) + src[1]);
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(float));
+#else
     memcpy(&f, &i, sizeof(float));
-
+#endif
+    
     return f;
 }
 
@@ -137,7 +146,12 @@ float modbus_get_float_dcba(const uint16_t *src)
     uint32_t i;
 
     i = ntohl(bswap_32((((uint32_t)src[0]) << 16) + src[1]));
+
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(float));
+#else
     memcpy(&f, &i, sizeof(float));
+#endif   
 
     return f;
 }
@@ -149,8 +163,13 @@ float modbus_get_float_badc(const uint16_t *src)
     uint32_t i;
 
     i = ntohl((uint32_t)(bswap_16(src[0]) << 16) + bswap_16(src[1]));
-    memcpy(&f, &i, sizeof(float));
 
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(float));
+#else
+    memcpy(&f, &i, sizeof(float));
+#endif 
+    
     return f;
 }
 
@@ -161,8 +180,13 @@ float modbus_get_float_cdab(const uint16_t *src)
     uint32_t i;
 
     i = ntohl((((uint32_t)src[1]) << 16) + src[0]);
-    memcpy(&f, &i, sizeof(float));
 
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(float));
+#else
+    memcpy(&f, &i, sizeof(float));
+#endif    
+    
     return f;
 }
 
@@ -173,7 +197,12 @@ float modbus_get_float(const uint16_t *src)
     uint32_t i;
 
     i = (((uint32_t)src[1]) << 16) + src[0];
+  
+ #ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(float));
+#else
     memcpy(&f, &i, sizeof(float));
+#endif   
 
     return f;
 }
@@ -182,8 +211,13 @@ float modbus_get_float(const uint16_t *src)
 void modbus_set_float_abcd(float f, uint16_t *dest)
 {
     uint32_t i;
-
-    memcpy(&i, &f, sizeof(uint32_t));
+    
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(uint32_t));
+#else
+    memcpy(&f, &i, sizeof(float));
+#endif
+    
     i = htonl(i);
     dest[0] = (uint16_t)(i >> 16);
     dest[1] = (uint16_t)i;
@@ -194,7 +228,12 @@ void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i;
 
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(uint32_t));
+#else
     memcpy(&i, &f, sizeof(uint32_t));
+#endif
+    
     i = bswap_32(htonl(i));
     dest[0] = (uint16_t)(i >> 16);
     dest[1] = (uint16_t)i;
@@ -205,7 +244,12 @@ void modbus_set_float_badc(float f, uint16_t *dest)
 {
     uint32_t i;
 
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(uint32_t));
+#else
     memcpy(&i, &f, sizeof(uint32_t));
+#endif
+    
     i = htonl(i);
     dest[0] = (uint16_t)bswap_16(i >> 16);
     dest[1] = (uint16_t)bswap_16(i & 0xFFFF);
@@ -216,7 +260,12 @@ void modbus_set_float_cdab(float f, uint16_t *dest)
 {
     uint32_t i;
 
+#ifdef CANDI_S    
+    memcpy_s(&i, sizeof(uint32_t), &f, sizeof(uint32_t));
+#else
     memcpy(&i, &f, sizeof(uint32_t));
+#endif
+    
     i = htonl(i);
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
@@ -227,7 +276,12 @@ void modbus_set_float(float f, uint16_t *dest)
 {
     uint32_t i;
 
+#ifdef CANDI_S    
+    memcpy_s(&f, sizeof(float), &i, sizeof(uint32_t));
+#else
     memcpy(&i, &f, sizeof(uint32_t));
+#endif
+    
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }

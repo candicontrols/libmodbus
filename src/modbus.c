@@ -23,6 +23,10 @@
 #include "modbus.h"
 #include "modbus-private.h"
 
+#ifdef CANDI_S
+ #include "candi_s.h"
+#endif
+
 /* Internal use */
 #define MSG_LENGTH_UNDEFINED -1
 
@@ -235,7 +239,11 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
 
     if (raw_req_length > 2) {
         /* Copy data after function code */
+#ifdef CANDI_S
+        memcpy_s(req + req_length,  MAX_MESSAGE_LENGTH - req_length, raw_req + 2, raw_req_length - 2);
+#else        
         memcpy(req + req_length, raw_req + 2, raw_req_length - 2);
+#endif        
         req_length += raw_req_length - 2;
     }
 
@@ -807,7 +815,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
             if (data == 0xFF00 || data == 0x0) {
                 mb_mapping->tab_bits[mapping_address] = data ? ON : OFF;
+#ifdef CANDI_S
+                memcpy_s(rsp, MAX_MESSAGE_LENGTH, req, req_length);
+#else        
                 memcpy(rsp, req, req_length);
+#endif        
                 rsp_length = req_length;
             } else {
                 rsp_length = response_exception(
@@ -832,7 +844,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             int data = (req[offset + 3] << 8) + req[offset + 4];
 
             mb_mapping->tab_registers[mapping_address] = data;
-            memcpy(rsp, req, req_length);
+#ifdef CANDI_S
+           memcpy_s(rsp, MAX_MESSAGE_LENGTH, req, req_length);
+#else        
+           memcpy(rsp, req, req_length);
+#endif
             rsp_length = req_length;
         }
     }
@@ -863,7 +879,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
             /* 4 to copy the bit address (2) and the quantity of bits */
+#ifdef CANDI_S
+            memcpy_s(rsp + rsp_length, MAX_MESSAGE_LENGTH - rsp_length, req + rsp_length, 4);
+#else
             memcpy(rsp + rsp_length, req + rsp_length, 4);
+#endif            
             rsp_length += 4;
         }
     }
@@ -893,7 +913,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
             /* 4 to copy the address (2) and the no. of registers */
+#ifdef CANDI_S
+            memcpy_s(rsp + rsp_length, MAX_MESSAGE_LENGTH - rsp_length, req + rsp_length, 4);
+#else
             memcpy(rsp + rsp_length, req + rsp_length, 4);
+#endif
             rsp_length += 4;
         }
     }
@@ -910,7 +934,12 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         rsp[rsp_length++] = 0xFF;
         /* LMB + length of LIBMODBUS_VERSION_STRING */
         str_len = 3 + strlen(LIBMODBUS_VERSION_STRING);
+
+#ifdef CANDI_S
+        memcpy_s(rsp + rsp_length, MAX_MESSAGE_LENGTH - rsp_length,  "LMB" LIBMODBUS_VERSION_STRING, str_len);
+#else
         memcpy(rsp + rsp_length, "LMB" LIBMODBUS_VERSION_STRING, str_len);
+#endif    
         rsp_length += str_len;
         rsp[byte_count_pos] = rsp_length - byte_count_pos - 1;
     }
@@ -937,7 +966,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
             data = (data & and) | (or & (~and));
             mb_mapping->tab_registers[mapping_address] = data;
+#ifdef CANDI_S
+            memcpy_s(rsp, MAX_MESSAGE_LENGTH, req, req_length);
+#else
             memcpy(rsp, req, req_length);
+#endif          
             rsp_length = req_length;
         }
     }
